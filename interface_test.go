@@ -12,10 +12,6 @@ func TestNetInterface(t *testing.T) {
 	compare.Compare(t, netInterface{}.Interface(), nil, true)
 }
 
-func TestMockInterface(t *testing.T) {
-	compare.Compare(t, MockInterface{}.Interface(), nil, true)
-}
-
 func TestInterfaces(t *testing.T) {
 	_, err := Interfaces()
 	compare.Compare(t, err, nil, true)

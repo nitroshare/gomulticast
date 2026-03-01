@@ -1,12 +1,7 @@
 package gomulticast
 
 import (
-	"errors"
 	"net"
-)
-
-var (
-	ErrNoPackets = errors.New("no packets to be received")
 )
 
 // Interface wraps the information in net.Interface. This allows for much
@@ -27,32 +22,6 @@ func (n netInterface) Interface() *net.Interface { return n.i }
 type Packet struct {
 	Addr net.Addr
 	Data []byte
-}
-
-// MockInterface implements Interface and provides methods for sending and
-// receiving packets on the interface.
-type MockInterface struct {
-	sendQueue []*Packet
-	recvQueue []*Packet
-}
-
-func (m MockInterface) Interface() *net.Interface { return nil }
-
-// Send queues the provided packet from the provided address for being
-// received by a listener.
-func (m *MockInterface) Send(p *Packet) {
-	m.sendQueue = append(m.sendQueue, p)
-}
-
-// Receive dequeues a packet that was sent by a listener. An error is returned
-// if there were no packets sent.
-func (m *MockInterface) Receive() (*Packet, error) {
-	if len(m.recvQueue) == 0 {
-		return nil, ErrNoPackets
-	}
-	p := m.recvQueue[0]
-	m.recvQueue = m.recvQueue[1:]
-	return p, nil
 }
 
 var (
