@@ -1,5 +1,10 @@
 ## gomulticast
 
+[![Build Status](https://github.com/nitroshare/gomulticast/actions/workflows/test.yml/badge.svg)](https://github.com/nitroshare/gomulticast/actions/workflows/test.yml)
+[![Coverage Status](https://coveralls.io/repos/github/nitroshare/gomulticast/badge.svg?branch=main)](https://coveralls.io/github/nitroshare/gomulticast?branch=main)
+[![Go Reference](https://pkg.go.dev/badge/github.com/nitroshare/gomulticast.svg)](https://pkg.go.dev/github.com/nitroshare/gomulticast)
+[![MIT License](https://img.shields.io/badge/license-MIT-9370d8.svg?style=flat)](https://opensource.org/licenses/MIT)
+
 This package provides a simple wrapper over the UDP multicast functions in [`net`](https://pkg.go.dev/net). One of the primary benefits of using this package is the ability to mock network access, allowing packages to easily test the implementation of their network code as-is:
 
 ```golang
