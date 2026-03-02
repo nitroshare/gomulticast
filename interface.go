@@ -18,7 +18,7 @@ type netInterface struct {
 
 func (n netInterface) Interface() *net.Interface { return n.i }
 
-// Packet represents a packet sent or received on a MockInterface.
+// Packet represents a packet sent or received.
 type Packet struct {
 	Addr net.Addr
 	Data []byte
