@@ -95,7 +95,13 @@ func NewMockInterface() *MockInterface {
 	return m
 }
 
-func (m MockInterface) Interface() *net.Interface { return nil }
+func (m MockInterface) Interface() *net.Interface {
+	return &net.Interface{
+		MTU:   1500,
+		Name:  "MockInterface",
+		Flags: net.FlagUp & net.FlagRunning & net.FlagMulticast,
+	}
+}
 
 // QueueForRead queues the provided packet for reading in a subsequent call to
 // Listener.Read().
