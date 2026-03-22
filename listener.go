@@ -4,6 +4,10 @@ import (
 	"net"
 )
 
+var (
+	origNetListenMulticastUDP = net.ListenMulticastUDP
+)
+
 type udpConn interface {
 	ReadFrom([]byte) (int, net.Addr, error)
 	WriteTo([]byte, net.Addr) (int, error)
@@ -19,7 +23,7 @@ func netListenMulticastUDP(
 	i Interface,
 	addr *net.UDPAddr,
 ) (udpConn, error) {
-	return net.ListenMulticastUDP(network, i.Interface(), addr)
+	return origNetListenMulticastUDP(network, i.Interface(), addr)
 }
 
 func mockListenMulticastUDP(

@@ -1,6 +1,7 @@
 package gomulticast
 
 import (
+	"errors"
 	"net"
 	"testing"
 
@@ -17,7 +18,19 @@ var (
 		Addr: testUDPAddr,
 		Data: testUDPData,
 	}
+	testError = errors.New("test")
 )
+
+func TestNewListenerError(t *testing.T) {
+	origNetListenMulticastUDP = func(_ string, _ *net.Interface, _ *net.UDPAddr) (*net.UDPConn, error) {
+		return nil, testError
+	}
+	defer func() {
+		origNetListenMulticastUDP = net.ListenMulticastUDP
+	}()
+	_, err := NewListener("", NewMockInterface(), nil)
+	compare.Compare(t, err, testError, true)
+}
 
 func TestListenerRead(t *testing.T) {
 	Mock()
@@ -35,7 +48,10 @@ func TestListenerRead(t *testing.T) {
 		compare.Compare(t, err, nil, true)
 	})
 	t.Run("test unsuccessful read", func(t *testing.T) {
-		//...
+		i.errOnNextRead = true
+		p, err := l.Read()
+		compare.Compare(t, p, nil, true)
+		compare.Compare(t, err, net.ErrClosed, true)
 	})
 }
 

@@ -21,6 +21,7 @@ type MockInterface struct {
 	chanTest            chan any
 	chanClose           chan any
 	chanClosed          chan any
+	errOnNextRead       bool
 }
 
 func (m *MockInterface) run() {
@@ -126,6 +127,10 @@ type mockUDPConn struct {
 }
 
 func (m *mockUDPConn) ReadFrom(b []byte) (int, net.Addr, error) {
+	if m.i.errOnNextRead {
+		m.i.errOnNextRead = false
+		return 0, nil, net.ErrClosed
+	}
 	m.i.chanReadRequest <- nil
 	p, ok := <-m.i.chanReadReply
 	if !ok {
