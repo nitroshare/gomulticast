@@ -64,7 +64,9 @@ The network interfaces present on a system can change during runtime (for exampl
 w := gomulticast.NewWatcher(30 * time.Second)
 defer w.Close()
 
-// Print a message when an interface is added or removed; in a real application, you'd probably want to create a new Listener when an interface is added
+// Print a message when an interface is added or removed; in a real
+// application, you'd probably want to create a new Listener when an
+// interface is added
 for {
     select {
     case i := <-w.ChanAdded:
