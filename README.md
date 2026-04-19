@@ -39,7 +39,7 @@ addr := &net.UDPAddr{
 }
 
 // Create a listener for sending and receiving packets
-l, err := gomulticast.New("udp4", iface, addr)
+l, err := gomulticast.NewListener("udp4", iface, addr)
 if err != nil {
     panic(err)
 }
