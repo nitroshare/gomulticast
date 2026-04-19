@@ -5,7 +5,11 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/nitroshare/gomulticast.svg)](https://pkg.go.dev/github.com/nitroshare/gomulticast)
 [![MIT License](https://img.shields.io/badge/license-MIT-9370d8.svg?style=flat)](https://opensource.org/licenses/MIT)
 
-This package provides a simple wrapper over the UDP multicast functions in [`net`](https://pkg.go.dev/net). One of the primary benefits of using this package is the ability to mock network access, allowing packages to easily test the implementation of their network code as-is:
+This package provides a simple wrapper over the UDP multicast functions in [`net`](https://pkg.go.dev/net). The two primary reasons one might want to use this package are:
+
+- Watching for network interfaces being added or removed (via `Watcher`)
+
+- The ability to mock network access, allowing packages to easily test the implementation of their network code as-is (via `Mock` and `Unmock`)
 
 ```golang
 import "github.com/nitroshare/gomulticast"
@@ -49,6 +53,26 @@ l.Write(&gomulticast.Packet{
 
 // Read a packet (this blocks)
 p, _ := l.Read()
+```
+
+### Watching for Interfaces
+
+The network interfaces present on a system can change during runtime (for example, a USB Wi-Fi adapter hot-plugged). In order to support these events, `Watcher` is provided:
+
+```golang
+// Poll for interfaces being added / removed every 30s
+w := gomulticast.NewWatcher(30 * time.Second)
+defer w.Close()
+
+// Print a message when an interface is added or removed; in a real application, you'd probably want to create a new Listener when an interface is added
+for {
+    select {
+    case i := <-w.ChanAdded:
+        fmt.Printf("%s added!", i.Interface().Name)
+    case i := <-w.ChanRemoved:
+        fmt.Printf("%s removed!", i.Interface().Name)
+    }
+}
 ```
 
 ### Mock Interfaces
