@@ -13,7 +13,7 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: Run test suite
-        run: go test -v ./...
+        run: go test -timeout 30s -v ./...
   coverage:
     runs-on: ubuntu-latest
     steps:
@@ -23,7 +23,7 @@ jobs:
         with:
           go-version: "stable"
       - name: Generate coverage profile
-        run: go test -v -coverprofile=profile.cov ./...
+        run: go test -timeout 30s -v -coverprofile=profile.cov ./...
       - name: Coveralls
         uses: coverallsapp/github-action@v2
         with:
