@@ -6,14 +6,25 @@ import (
 	"github.com/nitroshare/gotime"
 )
 
+// WatcherConfig provides configuration for Watcher.
+type WatcherConfig struct {
+
+	// Interval specifies how often the adapters on the host should be
+	// enumerated.
+	Interval time.Duration
+
+	// ChanAdded receives an Interface when a new interface is added. This can
+	// be left nil if not desired.
+	ChanAdded chan<- Interface
+
+	// ChanRemoved receives an Interface when an interface is removed. This
+	// can be left nil if not desired.
+	ChanRemoved chan<- Interface
+}
+
 // Watcher monitors available network interfaces and notifies when one is
 // added or removed.
 type Watcher struct {
-	// ChanAdded receives an Interface when a new interface is added.
-	ChanAdded <-chan Interface
-	// ChanRemoved receives an Interface when an interface is removed.
-	ChanRemoved <-chan Interface
-
 	chanAdded   chan<- Interface
 	chanRemoved chan<- Interface
 	chanClose   chan any
@@ -44,8 +55,14 @@ func (w *Watcher) diff(m map[string]Interface) map[string]Interface {
 
 func (w *Watcher) run(interval time.Duration) {
 	defer close(w.chanClosed)
-	defer close(w.chanRemoved)
-	defer close(w.chanAdded)
+	defer func() {
+		if w.chanAdded != nil {
+			close(w.chanAdded)
+		}
+		if w.chanRemoved != nil {
+			close(w.chanRemoved)
+		}
+	}()
 	var (
 		m = w.diff(map[string]Interface{})
 		t = gotime.NewTicker(interval)
@@ -61,21 +78,15 @@ func (w *Watcher) run(interval time.Duration) {
 	}
 }
 
-// NewWatcher creates a new Watcher instance using the provided interval.
-func NewWatcher(interval time.Duration) *Watcher {
-	var (
-		chanAdded   = make(chan Interface)
-		chanRemoved = make(chan Interface)
-		w           = &Watcher{
-			ChanAdded:   chanAdded,
-			ChanRemoved: chanRemoved,
-			chanAdded:   chanAdded,
-			chanRemoved: chanRemoved,
-			chanClose:   make(chan any),
-			chanClosed:  make(chan any),
-		}
-	)
-	go w.run(interval)
+// NewWatcher creates a new Watcher instance.
+func NewWatcher(cfg *WatcherConfig) *Watcher {
+	w := &Watcher{
+		chanAdded:   cfg.ChanAdded,
+		chanRemoved: cfg.ChanRemoved,
+		chanClose:   make(chan any),
+		chanClosed:  make(chan any),
+	}
+	go w.run(cfg.Interval)
 	return w
 }
 
