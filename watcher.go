@@ -6,6 +6,10 @@ import (
 	"github.com/nitroshare/gotime"
 )
 
+var (
+	chanWatcherTest chan any
+)
+
 // WatcherConfig provides configuration for Watcher.
 type WatcherConfig struct {
 
@@ -64,9 +68,12 @@ func (w *Watcher) run(interval time.Duration) {
 		}
 	}()
 	var (
-		m = w.diff(map[string]Interface{})
+		m = map[string]Interface{}
 		t = gotime.NewTicker(interval)
 	)
+	if chanWatcherTest != nil {
+		chanWatcherTest <- nil
+	}
 	defer t.Stop()
 	for {
 		select {
