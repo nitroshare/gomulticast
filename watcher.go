@@ -25,6 +25,7 @@ type WatcherConfig struct {
 // Watcher monitors available network interfaces and notifies when one is
 // added or removed.
 type Watcher struct {
+	chanTest    chan any
 	chanAdded   chan<- Interface
 	chanRemoved chan<- Interface
 	chanClose   chan any
@@ -45,6 +46,7 @@ func (w *Watcher) diff(m map[string]Interface) map[string]Interface {
 			select {
 			case w.chanRemoved <- v:
 			case <-w.chanClose:
+				return nil
 			}
 		}
 	}
@@ -53,6 +55,7 @@ func (w *Watcher) diff(m map[string]Interface) map[string]Interface {
 			select {
 			case w.chanAdded <- v:
 			case <-w.chanClose:
+				return nil
 			}
 		}
 	}
@@ -69,7 +72,13 @@ func (w *Watcher) run(interval time.Duration) {
 	for {
 		select {
 		case <-t.C:
+			if w.chanTest != nil {
+				close(w.chanTest)
+			}
 			m = w.diff(m)
+			if m == nil {
+				return
+			}
 		case <-w.chanClose:
 			return
 		}
