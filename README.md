@@ -61,7 +61,17 @@ The network interfaces present on a system can change during runtime (for exampl
 
 ```golang
 // Poll for interfaces being added / removed every 30s
-w := gomulticast.NewWatcher(30 * time.Second)
+var (
+    chanAdded   = make(chan gomulticast.Interface)
+    chanRemoved = make(chan gomulticast.Interface)
+    w           = gomulticast.NewWatcher(
+        &gomulticast.WatcherConfig{
+            Interval:    30 * time.Second,
+            ChanAdded:   chanAdded,
+            ChanRemoved: chanRemoved,
+        },
+    )
+)
 defer w.Close()
 
 // Print a message when an interface is added or removed; in a real
@@ -69,9 +79,9 @@ defer w.Close()
 // interface is added
 for {
     select {
-    case i := <-w.ChanAdded:
+    case i := <-chanAdded:
         fmt.Printf("%s added!", i.Interface().Name)
-    case i := <-w.ChanRemoved:
+    case i := <-chanRemoved:
         fmt.Printf("%s removed!", i.Interface().Name)
     }
 }
