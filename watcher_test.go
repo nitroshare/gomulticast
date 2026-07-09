@@ -13,10 +13,6 @@ func TestWatcher(t *testing.T) {
 	defer gotime.Unmock()
 	Mock()
 	defer Unmock()
-	chanWatcherTest = make(chan any)
-	defer func() {
-		chanWatcherTest = nil
-	}()
 	var (
 		chanAdded   = make(chan Interface)
 		chanRemoved = make(chan Interface)
@@ -27,9 +23,7 @@ func TestWatcher(t *testing.T) {
 		})
 	)
 	defer w.Close()
-	<-chanWatcherTest
 	AddMockInterface(NewMockInterface())
-	gotime.Advance(2 * time.Second)
 	<-chanAdded
 	mInterfaces = []Interface{}
 	gotime.Advance(2 * time.Second)
@@ -49,6 +43,14 @@ func TestWatcherError(t *testing.T) {
 	defer func() {
 		origNetInterfaces = net.Interfaces
 	}()
-	w := NewWatcher(&WatcherConfig{Interval: time.Second})
+	var (
+		chanAdded   = make(chan Interface)
+		chanRemoved = make(chan Interface)
+		w           = NewWatcher(&WatcherConfig{
+			Interval:    time.Second,
+			ChanAdded:   chanAdded,
+			ChanRemoved: chanRemoved,
+		})
+	)
 	defer w.Close()
 }

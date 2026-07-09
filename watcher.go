@@ -6,10 +6,6 @@ import (
 	"github.com/nitroshare/gotime"
 )
 
-var (
-	chanWatcherTest chan any
-)
-
 // WatcherConfig provides configuration for Watcher.
 type WatcherConfig struct {
 
@@ -17,12 +13,12 @@ type WatcherConfig struct {
 	// enumerated.
 	Interval time.Duration
 
-	// ChanAdded receives an Interface when a new interface is added. This can
-	// be left nil if not desired.
+	// ChanAdded receives an Interface when a new interface is added. This
+	// cannot be nil and must be a valid channel.
 	ChanAdded chan<- Interface
 
 	// ChanRemoved receives an Interface when an interface is removed. This
-	// can be left nil if not desired.
+	// cannot be nil and must be a valid channel.
 	ChanRemoved chan<- Interface
 }
 
@@ -46,12 +42,18 @@ func (w *Watcher) diff(m map[string]Interface) map[string]Interface {
 	}
 	for k, v := range m {
 		if _, ok := m2[k]; !ok {
-			w.chanRemoved <- v
+			select {
+			case w.chanRemoved <- v:
+			case <-w.chanClose:
+			}
 		}
 	}
 	for k, v := range m2 {
 		if _, ok := m[k]; !ok {
-			w.chanAdded <- v
+			select {
+			case w.chanAdded <- v:
+			case <-w.chanClose:
+			}
 		}
 	}
 	return m2
@@ -59,22 +61,11 @@ func (w *Watcher) diff(m map[string]Interface) map[string]Interface {
 
 func (w *Watcher) run(interval time.Duration) {
 	defer close(w.chanClosed)
-	defer func() {
-		if w.chanAdded != nil {
-			close(w.chanAdded)
-		}
-		if w.chanRemoved != nil {
-			close(w.chanRemoved)
-		}
-	}()
-	var (
-		m = map[string]Interface{}
-		t = gotime.NewTicker(interval)
-	)
-	if chanWatcherTest != nil {
-		chanWatcherTest <- nil
-	}
+	defer close(w.chanRemoved)
+	defer close(w.chanAdded)
+	t := gotime.NewTicker(interval)
 	defer t.Stop()
+	m := w.diff(map[string]Interface{})
 	for {
 		select {
 		case <-t.C:
